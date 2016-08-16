@@ -5,7 +5,7 @@ const log = console.log.bind(console);
 function Model(db, { createId, indexes, migrations }, validate) {
   this._createId = createId;
   this.db = db;
-  this.indexes = indexes || {};
+  this.indexes = indexes;
   this.validate = validate;
   this.migrations = migrations;
 }
