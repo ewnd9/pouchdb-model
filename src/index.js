@@ -40,40 +40,71 @@ Model.prototype.findOneOrInit = function(id, init) {
     .then(null, err => this.onNotFound(err, init));
 };
 
-Model.prototype.findByIndex = function(index, { descending, limit, since }) {
+Model.prototype.findByIndexRaw = function(index, options = {}) {
   return this.db
-    .query(index, {
-      include_docs: true,
-      descending,
-      skip: since ? 1 : 0,
-      startkey: since || undefined,
-      limit
-    })
+    .query(index, normalizeAllDocsOptions({ include_docs: true, ...options }));
+};
+
+Model.prototype.findByIndex = function(index, options = {}) {
+  return this
+    .findByIndexRaw(index, options)
+    .then(
+      res => res.rows.map(
+        row => ({
+          ...row.doc,
+          _key: row.key
+        })
+      )
+    );
+};
+
+Model.prototype.findAllRaw = function(options = {}) {
+  return this.db
+    .allDocs(normalizeAllDocsOptions({ include_docs: true, ...options }));
+};
+
+Model.prototype.findAll = function(options = {}) {
+  return this.findAllRaw(options)
     .then(res => res.rows.map(row => ({
       ...row.doc,
       _key: row.key
     })));
 };
 
-Model.prototype.findAll = function() {
-  return this.db
-    .allDocs({ include_docs: true });
-};
+function normalizeAllDocsOptions(options) {
+  const startkey = typeof options.startkey === 'undefined' ? (
+    options.descending ? (
+      options.since || undefined
+    ) : (
+      options.since || '_design\uffff'
+    )
+  ) : (
+    options.startkey
+  );
 
-Model.prototype.findAllDocs = function({ descending, limit, since }) {
-  return this.db
-    .allDocs({
-      include_docs: true,
-      descending,
-      skip: since ? 1 : 0,
-      startkey: since || undefined,
-      limit
-    })
-    .then(res => res.rows.map(row => ({
-      ...row.doc,
-      _key: row.key
-    })));
-};
+  const endkey = typeof options.endkey === 'undefined' ? (
+    options.descending ? (
+      '_design'
+    ) : (
+      options.since || undefined
+    )
+  ) : (
+    options.endkey
+  );
+
+  const skip = options.since ? 1 : 0;
+
+  delete options.since;
+  delete options.startkey;
+  delete options.endkey;
+
+  return {
+    skip,
+    startkey,
+    endkey,
+    ...options
+  };
+}
 
 Model.prototype.put = function(id, _data) {
   const data = _data || id;
