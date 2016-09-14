@@ -1,12 +1,13 @@
 module.exports = Model;
 
 const log = console.log.bind(console);
+const noopValidation = input => Promise.resolve(input);
 
 function Model(db, { createId, indexes, migrations }, validate) {
   this._createId = createId;
   this.db = db;
   this.indexes = indexes;
-  this.validate = validate;
+  this.validate = validate || noopValidation;
   this.migrations = migrations;
 }
 
