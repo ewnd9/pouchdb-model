@@ -109,7 +109,7 @@ function normalizeAllDocsOptions(options) {
 Model.prototype.put = function(id, _data) {
   const data = _data || id;
 
-  if (data._key) {
+  if ('_key' in data) {
     delete data._key;
   }
 
