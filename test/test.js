@@ -10,6 +10,13 @@ test('Create correct subtitles model', async t => {
   const db = new PouchDB('test', { adapter: 'memory' });
   const model = new Model(db, { createId: ({ name }) => name });
 
-  const items = await model.findAll();
-  t.truthy(items.rows.length === 0);
+  const items0 = await model.findAll();
+  t.truthy(items0.length === 0);
+
+  const item = { name: 'test' };
+  const itemDb = await model.update(item);
+  t.deepEqual(Object.keys(itemDb), ['name', 'updatedAt', '_id']);
+
+  const items1 = await model.findAll();
+  t.truthy(items1.length === 1);
 });
