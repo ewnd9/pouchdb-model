@@ -16,7 +16,9 @@
   "keywords": [
     ""
   ],
-  "dependencies": {},
+  "dependencies": {
+    "debug": "^2.2.0"
+  },
   "devDependencies": {
     "ava": "^0.16.0",
     "babel-cli": "~6.6.0",

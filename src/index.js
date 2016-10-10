@@ -1,6 +1,6 @@
 module.exports = Model;
 
-const log = console.log.bind(console);
+const log = require('debug')('pouchdb-model');
 const noopValidation = input => Promise.resolve(input);
 
 function Model(db, { createId, indexes, migrations }, validate) {
@@ -123,7 +123,10 @@ Model.prototype.put = function(id, _data) {
   return this
     .validate(doc)
     .then(doc => this.db.put(doc))
-    .then(() => doc);
+    .then(result => {
+      doc._rev = result.rev;
+      return doc;
+    });
 };
 
 Model.prototype.update = function(id, _data) {
