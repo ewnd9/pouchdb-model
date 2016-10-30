@@ -5,6 +5,7 @@ import PouchDB from 'pouchdb';
 import 'pouchdb/extras/memory';
 
 import Model from '../src/index';
+import init from '../src/init';
 
 test('Create correct subtitles model', async t => {
   const db = new PouchDB('test', { adapter: 'memory' });

@@ -16,6 +16,8 @@ $ npm install --save pouchdb-model
 
 ```js
 // file.js
+
+// `pouchdb-model` is completely decoupled from `tcomb`, you could use any validation library
 import t from 'tcomb-validation';
 
 export const updatedAtIndex = 'updatedAtIndex';
@@ -50,65 +52,38 @@ export default File;
 
 import PouchDB from 'pouchdb';
 import t from 'tcomb-validation';
-import Model from 'pouchdb-model';
 
+import File from './file';
+import initPouchModels from 'pouchdb-model/dist/init';
+
+// if you don't use migrations, you could omit this import
 import MigratePlugin from 'pouchdb-migrate';
 PouchDB.plugin(MigratePlugin);
 
-import File from './file';
-
-export default (dbPath, dbOptions = {}) => {
-  const initializers = {
-    File
-  };
-
-  if (!('auto_compaction' in dbOptions)) {
-    dbOptions.auto_compaction = true;
-  }
-
-  const models = Object
-    .keys(initializers)
-    .reduce((result, key) => {
-      const name = key.toLowerCase();
-
-      const db = new PouchDB(`${dbPath}-${name}`, dbOptions);
-      db.on('error', err => console.log('pouch-error', err));
-
-      const obj = initializers[key];
-      const validate = validateFactory(obj.schema);
-
-      result[key] = new Model(db, obj, validate);
-
-      return result;
-    }, {});
-
-  const promises = Object
-    .keys(models)
-    .map(key => {
-      return models[key].db.compact()
-        .then(() => models[key].ensureMigrations())
-        .then(() => models[key].ensureIndexes());
-    });
-
-  return Promise.all(promises).then(() => models);
+const initializers = {
+  File
 };
 
-function validateFactory(schema) {
-  if (!schema) {
-    return obj => Promise.resolve(obj);
-  }
-
-  return obj => {
-    const result = t.validate(obj, schema, { strict: true });
-
-    if (result.isValid()) {
-      return Promise.resolve(obj);
-    }
-
-    return Promise.reject(result.errors);
-  };
+export default () => {
+  return initPouchModels(initializers, createDb, validationFactory)
+    .then(db => { //=> { File } // instances of `pouchdb-model`
+      return db;
+    });
 }
 
+function createDb(name) {
+  const db = new PouchDB(name.toLowerCase());
+  db.on('error', err => console.log('pouch-error', err));
+
+  return db;
+}
+
+function validationFactory(schema) {
+  return obj => {
+    const result = t.validate(obj, schema, { strict: true });
+    return result.isValid() ? Promise.resolve(obj) : Promise.reject(result.errors);
+  };
+}
 ```
 
 ## License
