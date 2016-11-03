@@ -27,9 +27,9 @@ test('Create correct subtitles model', async t => {
   t.truthy(items1.length === 1);
 });
 
-test('sync', async t => {
-  const db0 = new PouchDB('test0', { adapter: 'memory' });
-  const db1 = new PouchDB('test1', { adapter: 'memory' });
+test('#sync', async t => {
+  const db0 = new PouchDB('sync-0', { adapter: 'memory' });
+  const db1 = new PouchDB('sync-1', { adapter: 'memory' });
 
   const model0 = new Model(db0, { createId: ({ name }) => name });
   const model1 = new Model(db1, { createId: ({ name }) => name });
@@ -49,6 +49,18 @@ test('sync', async t => {
     'Paused',
     'Complete'
   ]);
+});
+
+test('#sync fail', async t => {
+  const db = new PouchDB('sync-fail', { adapter: 'memory' });
+  const model = new Model(db, { createId: ({ name }) => name });
+
+  t.throws(model.sync('http://localhost:1024/', () => {})); // wrong address
+});
+
+test('#onNotFound', async t => {
+  const model = new Model(null, { createId: () => `item:${uuid.v4()}` });
+  t.throws(() => model.onNotFound(new Error('test')));
 });
 
 test('#createId', async t => {

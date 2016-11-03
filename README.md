@@ -1,7 +1,7 @@
 # pouchdb-model
 
 [![Build Status](https://travis-ci.org/ewnd9/pouchdb-model.svg?branch=master)](https://travis-ci.org/ewnd9/pouchdb-model)
-[![Coverage Status](https://coveralls.io/repos/ewnd9/pouchdb-model/badge.svg?branch=master&service=github)](https://coveralls.io/github/ewnd9/pouchdb-model?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/ewnd9/pouchdb-model/badge.svg?branch=master)](https://coveralls.io/github/ewnd9/pouchdb-model?branch=master)
 
 Convenient wrapper for pouchdb
 
