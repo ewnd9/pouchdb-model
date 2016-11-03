@@ -13,7 +13,7 @@ function Model(db, { createId, indexes, migrations }, validate) {
 }
 
 Model.prototype.createId = function(data) {
-  if (typeof data === 'object' && data._id) {
+  if (data._id) {
     return data._id;
   } else {
     return this._createId(data);
@@ -108,16 +108,14 @@ Model.prototype.normalizeAllDocsOptions = function(options) {
   };
 };
 
-Model.prototype.put = function(id, _data) {
-  const data = _data || id;
-
+Model.prototype.put = function(data) {
   if ('_key' in data) {
     delete data._key;
   }
 
   const doc = {
     ...data,
-    _id: this.createId(id),
+    _id: this.createId(data),
     updatedAt: new Date().toISOString()
   };
 
@@ -130,21 +128,20 @@ Model.prototype.put = function(id, _data) {
     });
 };
 
-Model.prototype.update = function(id, _data) {
-  const data = _data || id;
+Model.prototype.update = function(data) {
+  data._id = this.createId(data);
   data.updatedAt = new Date().toISOString();
 
   return this
-    .findOne(id)
+    .findOne(data)
     .then(
       dbData => {
         const obj = { ...dbData, ...data };
         obj._rev = dbData._rev;
-
-        return this.put(id, obj);
+        return this.put(obj);
       },
       err => this.onNotFound(err, () => {
-        return this.put(id, data);
+        return this.put(data);
       })
     );
 };

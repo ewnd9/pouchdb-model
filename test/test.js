@@ -18,7 +18,7 @@ test('Create correct subtitles model', async t => {
 
   let item = { name: 'test' };
   item = await model.update(item);
-  t.deepEqual(Object.keys(item), ['name', 'updatedAt', '_id', '_rev']);
+  t.deepEqual(Object.keys(item), ['name', '_id', 'updatedAt', '_rev']);
 
   item = await model.update(item);
   t.truthy(item._rev.indexOf('2-') === 0);
