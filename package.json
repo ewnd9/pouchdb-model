@@ -34,7 +34,8 @@
     "pouchdb-memory": "^6.0.0",
     "pouchdb-migrate": "^1.1.1",
     "tcomb": "^3.2.15",
-    "tcomb-validation": "^3.2.2"
+    "tcomb-validation": "^3.2.2",
+    "uuid": "^2.0.3"
   },
   "author": "ewnd9 <ewndnine@gmail.com>",
   "files": [

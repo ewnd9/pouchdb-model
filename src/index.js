@@ -44,7 +44,7 @@ Model.prototype.findOneOrInit = function(id, init) {
 
 Model.prototype.findByIndexRaw = function(index, options = {}) {
   return this.db
-    .query(index, normalizeAllDocsOptions({ include_docs: true, ...options }));
+    .query(index, this.normalizeAllDocsOptions({ include_docs: true, ...options }));
 };
 
 Model.prototype.findByIndex = function(index, options = {}) {
@@ -62,7 +62,7 @@ Model.prototype.findByIndex = function(index, options = {}) {
 
 Model.prototype.findAllRaw = function(options = {}) {
   return this.db
-    .allDocs(normalizeAllDocsOptions({ include_docs: true, ...options }));
+    .allDocs(this.normalizeAllDocsOptions({ include_docs: true, ...options }));
 };
 
 Model.prototype.findAll = function(options = {}) {
@@ -73,7 +73,7 @@ Model.prototype.findAll = function(options = {}) {
     })));
 };
 
-function normalizeAllDocsOptions(options) {
+Model.prototype.normalizeAllDocsOptions = function(options) {
   const startkey = typeof options.startkey === 'undefined' ? (
     options.descending ? (
       options.since || undefined
@@ -106,7 +106,7 @@ function normalizeAllDocsOptions(options) {
     endkey,
     ...options
   };
-}
+};
 
 Model.prototype.put = function(id, _data) {
   const data = _data || id;
@@ -124,7 +124,7 @@ Model.prototype.put = function(id, _data) {
   return this
     .validate(doc)
     .then(doc => this.db.put(doc))
-    .then(result => {
+    .then(result => { // Object.keys(result) //=> ['ok', 'id', 'rev']
       doc._rev = result.rev;
       return doc;
     });
@@ -141,14 +141,10 @@ Model.prototype.update = function(id, _data) {
         const obj = { ...dbData, ...data };
         obj._rev = dbData._rev;
 
-        return this
-          .validate(obj)
-          .then(obj => this.put(id, obj));
+        return this.put(id, obj);
       },
       err => this.onNotFound(err, () => {
-        return this
-          .validate(data)
-          .then(obj => this.put(id, obj));
+        return this.put(id, data);
       })
     );
 };
@@ -195,7 +191,7 @@ Model.prototype.sync = function(db, options, notify) {
         reject(err);
       });
   });
-}
+};
 
 Model.prototype.createDesignDoc = function(name, mapFunction) {
   const ddoc = {
