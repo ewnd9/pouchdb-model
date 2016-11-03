@@ -49,7 +49,6 @@
   },
   "ava": {
     "require": [
-      "source-map-support/register",
       "babel-register"
     ],
     "babel": "inherit"
