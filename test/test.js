@@ -142,6 +142,33 @@ test('#update', async t => {
   await model.update({ name: 'test' });
 });
 
+test('#bulk', async t => {
+  const db = new PouchDB('bulk', { adapter: 'memory' });
+
+  const validate = doc => new Promise((resolve, reject) => {
+    return doc.name !== 'test-4' ? resolve(doc) : reject(new Error('name === test-4'));
+  });
+
+  const model = new Model(db, {
+    createId: ({ name }) => `item:${name}`,
+  }, validate);
+
+  const result0 = await model.bulk([{ name: 'test-1' }, { name: 'test-2' }]);
+  const result1 = await model.bulk([{ name: 'test-1' }, { name: 'test-2' }, { name: 'test-3' }]);
+
+  t.truthy(result0.filter(_ => _._rev).length === 2);
+  t.truthy(result1.filter(_ => _._rev).length === 1);
+
+  const result2 = await model.bulk([{ name: 'test-1' }, { name: 'test-2' }, { name: 'test-3' }, { name: 'test-4' }]);
+  t.truthy(result2.filter(_ => _.rev).length === 0);
+  t.deepEqual(result2.filter(_ => _.error).map(_ => _.name), [
+    'conflict',
+    'conflict',
+    'conflict',
+    'validation error'
+  ]);
+});
+
 test('#ensureIndexes', async t => {
   const db = new PouchDB('ensureIndexes', { adapter: 'memory' });
 

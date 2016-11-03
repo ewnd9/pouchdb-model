@@ -146,6 +146,61 @@ Model.prototype.update = function(data) {
     );
 };
 
+Model.prototype.bulk = function(docs) {
+  const errors = [];
+  const correct = [];
+
+  return Promise
+    .all(
+      docs.map((doc, index) => this.validate(doc).then(
+        doc => correct.push({ doc, index }),
+        err => errors.push({
+          err: {
+            error: true,
+            name: 'validation error',
+            err
+          },
+          index
+        })
+      ))
+    )
+    .then(() => {
+      const docs = correct.map(item => {
+        item.doc._id = this.createId(item.doc);
+        return item.doc;
+      });
+      return this.db.bulkDocs(docs);
+    })
+    .then(dbDocs => {
+      let correctIndex = 0;
+      let errorsIndex = 0;
+      let dbIndex = 0;
+
+      return docs.map((doc, index) => {
+        let dbDoc;
+
+        if (correct[correctIndex] && correct[correctIndex].index === index) {
+          dbDoc = dbDocs[dbIndex];
+          correctIndex++;
+          dbIndex++;
+        } else if (errors[errorsIndex] && errors[errorsIndex].index === index) {
+          dbDoc = errors[errorsIndex].err;
+          errorsIndex++;
+        }
+
+        if (dbDoc.ok === true) {
+          return {
+            ...docs[index],
+            _id: dbDoc.id,
+            _rev: dbDoc.rev
+          };
+        }
+
+        return dbDoc;
+      });
+    });
+};
+
 /*
  * https://pouchdb.com/api.html#sync
  */
