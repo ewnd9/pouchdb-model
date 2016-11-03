@@ -1,6 +1,7 @@
 module.exports = Model;
 
 const log = require('debug')('pouchdb-model');
+const capitalize = require('lodash.capitalize');
 const noopValidation = input => Promise.resolve(input);
 
 function Model(db, { createId, indexes, migrations }, validate) {
@@ -151,6 +152,50 @@ Model.prototype.update = function(id, _data) {
       })
     );
 };
+
+/*
+ * https://pouchdb.com/api.html#sync
+ */
+Model.prototype.sync = function(db, options, notify) {
+  if (!notify && typeof options === 'function') {
+    notify = options;
+    options = {};
+  }
+
+  return new Promise((resolve, reject) => {
+    this.db
+      .sync(db, options)
+      .on('change', info => {
+        // handle change // info.doc_read info.doc_written info.last_seq info.errors
+        const message =
+          `${capitalize(info.direction)}: ` +
+          `${info.change.docs_read} read, ${info.change.docs_written} written`;
+
+        notify('change', info, message);
+      })
+      .on('paused', err => {
+        // replication paused (e.g. replication up to date, user went offline)
+        notify('paused', err, 'Paused');
+      })
+      .on('active', () => {
+        // replicate resumed (e.g. new changes replicating, user went back online)
+        notify('action', null, 'Action');
+      })
+      .on('denied', err => {
+        // a document failed to replicate, e.g. due to permissions
+        notify('denied', err, 'Denied');
+      })
+      .on('complete', info => {
+        // handle complete
+        notify('complete', info, 'Complete');
+        resolve();
+      })
+      .on('error', err => {
+        notify('error', err, `Error: ${err.message}`);
+        reject(err);
+      });
+  });
+}
 
 Model.prototype.createDesignDoc = function(name, mapFunction) {
   const ddoc = {
