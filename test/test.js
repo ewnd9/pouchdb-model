@@ -1,8 +1,5 @@
 import test from 'ava';
-import 'babel-core/register';
-
-import PouchDB from 'pouchdb';
-import 'pouchdb/extras/memory';
+import PouchDB from 'pouchdb-memory';
 
 import Model from '../src/index';
 import init from '../src/init';
