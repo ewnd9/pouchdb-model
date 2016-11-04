@@ -8,6 +8,11 @@ test('#ensureMigrations without plugin', async t => {
 
   const model = new Model(db, {
     createId: ({ name }) => name,
+    migrations: [
+      function(doc) {
+        return;
+      }
+    ]
   });
 
   t.throws(model.ensureMigrations());

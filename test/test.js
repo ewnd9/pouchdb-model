@@ -75,27 +75,96 @@ test('#createId', async t => {
   t.truthy(model.createId({ _id: id0 }) === id0);
 });
 
-test('#normalizeAllDocsOptions', async t => {
+test('#normalizeOptions', async t => {
   const model = new Model(null, { createId: () => `item:${uuid.v4()}` });
 
-  t.deepEqual(model.normalizeAllDocsOptions({}), {
+  t.deepEqual(model.normalizeOptions({}), {
     skip: 0,
     startkey: '_design\uffff',
     endkey: undefined
   });
 
-  t.deepEqual(model.normalizeAllDocsOptions({ descending: true }), {
+  t.deepEqual(model.normalizeOptions({ descending: true }), {
     skip: 0,
     startkey: undefined,
-    endkey: '_design',
+    endkey: '_design\uffff',
     descending: true
   });
 
-  t.deepEqual(model.normalizeAllDocsOptions({ startkey: 'random' }), {
+  t.deepEqual(model.normalizeOptions({ startkey: 'random' }), {
     skip: 0,
     startkey: 'random',
     endkey: undefined
   });
+
+  t.deepEqual(model.normalizeOptions({ since: 'random' }), {
+    skip: 1,
+    startkey: 'random',
+    endkey: undefined
+  });
+
+  t.deepEqual(model.normalizeOptions({ since: 'random', descending: true }), {
+    skip: 1,
+    startkey: 'random',
+    endkey: '_design\uffff',
+    descending: true
+  });
+
+  t.deepEqual(model.normalizeOptions({ since: undefined, descending: true }), {
+    skip: 0,
+    startkey: undefined,
+    endkey: '_design\uffff',
+    descending: true
+  });
+});
+
+test('#findAll', async t => {
+  const db = new PouchDB('findAll', { adapter: 'memory' });
+  const model = new Model(db, {
+    createId: ({ i }) => `item:${i}`,
+    indexes: [
+      {
+        name: 'testIndex',
+        fn: function(doc) {
+          if (doc.i) {
+            emit(doc.numId);
+          }
+        }
+      }
+    ]
+  });
+
+  await model.ensureIndexes();
+
+  for (let i = 0 ; i < 10 ; i++) {
+    await model.put({ i });
+  }
+
+  const fn = opts => model.findAll(opts).then(docs => docs.map(doc => doc.i));
+
+  t.deepEqual(await fn(), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+
+  const allDocs = await db.allDocs({ include_docs: true }).then(res => res.rows.map(row => row.doc.i));
+  // undefined is a design doc
+  t.deepEqual(allDocs, [undefined, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+
+  t.deepEqual(await fn({ startkey: 'item:6' }), [6, 7, 8, 9]);
+  t.deepEqual(await fn({ startkey: 'item:6', endkey: 'item:8' }), [6, 7, 8]);
+
+  const doc2 = await fn({ since: undefined, limit: 7 });
+  t.deepEqual(doc2, [0, 1, 2, 3, 4, 5, 6]);
+
+  t.deepEqual(await fn({ since: `item:${doc2[doc2.length - 1]}` }), [7, 8, 9]);
+  t.deepEqual(await fn({ since: `item:${doc2[doc2.length - 1]}`, endkey: 'item:8' }), [7, 8]);
+
+  t.deepEqual(await fn({ startkey: 'item:3', descending: true }), [3, 2, 1, 0]);
+  t.deepEqual(await fn({ startkey: 'item:3', endkey: 'item:1', descending: true }), [3, 2, 1]);
+
+  const doc3 = await fn({ since: undefined, limit: 7, descending: true });
+  t.deepEqual(doc3, [9, 8, 7, 6, 5, 4, 3]);
+
+  t.deepEqual(await fn({ since: `item:${doc3[doc3.length - 1]}`, descending: true }), [2, 1, 0]);
+  t.deepEqual(await fn({ since: `item:${doc3[doc3.length - 1]}`, endkey: 'item:1', descending: true }), [2, 1]);
 });
 
 test('#findOneOrInit', async t => {

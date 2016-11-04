@@ -3,5 +3,6 @@
 *.log
 play.js
 file
+file-mrview*
 .nyc_output
 coverage

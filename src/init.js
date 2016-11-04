@@ -1,6 +1,8 @@
 import Model from './';
 
-export default (initializers, createDb, validateFactory) => {
+const noopValidation = () => input => Promise.resolve(input);
+
+export default (initializers, createDb, validateFactory = noopValidation) => {
   const models = Object
     .keys(initializers)
     .reduce((result, key) => {
