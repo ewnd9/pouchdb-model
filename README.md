@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/ewnd9/pouchdb-model.svg?branch=master)](https://travis-ci.org/ewnd9/pouchdb-model)
 [![Coverage Status](https://coveralls.io/repos/github/ewnd9/pouchdb-model/badge.svg?branch=master)](https://coveralls.io/github/ewnd9/pouchdb-model?branch=master)
 
-Convenient Wrapper for PouchDB
+Convenient Wrapper for [PouchDB](https://github.com/pouchdb/pouchdb)
 
 ## Install
 
@@ -13,8 +13,8 @@ $ npm install --save pouchdb-model
 
 ## Examples
 
-- [examples/simple](example/simple) (inlined below) - no schema / no validation
-- [examples/tcomb](example/tcomb) - schema and validation by [tcomb](https://github.com/gcanti/tcomb)
+- [examples/simple](examples/simple) (inlined below) - no schema / no validation
+- [examples/tcomb](examples/tcomb) - schema and validation by [tcomb](https://github.com/gcanti/tcomb)
 
 ```js
 import PouchDB from 'pouchdb';
@@ -126,6 +126,10 @@ Returns an array of the same length containing corresponding doc (has `_id` and 
 or error (has `error`, `name`, `status` and, in case of validation error - `err`)
 
 ### `#sync(db: PouchDB | String, options: Object?, notify: Function)`
+
+## Related
+
+- [PouchDB Plugins](https://pouchdb.com/external.html#plugins)
 
 ## License
 
