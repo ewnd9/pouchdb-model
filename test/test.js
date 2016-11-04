@@ -140,13 +140,17 @@ test('#findAll', async t => {
     await model.put({ i });
   }
 
-  const fn = opts => model.findAll(opts).then(docs => docs.map(doc => doc.i));
+  const mapFn = docs => docs.map(doc => doc.i);
+  const fn = opts => model.findAll(opts).then(mapFn);
 
   t.deepEqual(await fn(), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
-  const allDocs = await db.allDocs({ include_docs: true }).then(res => res.rows.map(row => row.doc.i));
-  // undefined is a design doc
-  t.deepEqual(allDocs, [undefined, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+  const allDocs0 = await db.allDocs({ include_docs: true }).then(res => res.rows.map(row => row.doc.i));
+  // undefined is a design doc, the whole premise of normalizeOptions is to filter design docs
+  t.deepEqual(allDocs0, [undefined, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+
+  const allDocs1 = mapFn(await model.findAll({ include_docs: true }, true));
+  t.deepEqual(allDocs1, [undefined, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
 
   t.deepEqual(await fn({ startkey: 'item:6' }), [6, 7, 8, 9]);
   t.deepEqual(await fn({ startkey: 'item:6', endkey: 'item:8' }), [6, 7, 8]);

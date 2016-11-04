@@ -41,35 +41,40 @@ Model.prototype.findOneOrInit = function(id, init) {
     .then(null, err => this.onNotFound(err, init));
 };
 
-Model.prototype.findByIndexRaw = function(index, options = {}) {
-  return this.db
-    .query(index, this.normalizeOptions({ include_docs: true, ...options }, true));
-};
+function flattenDocs(res) {
+  return res.rows.map(row => ({
+    ...row.doc,
+    _key: row.key
+  }));
+}
 
-Model.prototype.findByIndex = function(index, options = {}) {
-  return this
-    .findByIndexRaw(index, options)
-    .then(
-      res => res.rows.map(
-        row => ({
-          ...row.doc,
-          _key: row.key
-        })
-      )
+Model.prototype.findByIndexRaw = function(index, options = {}, omitNormalization) {
+  return this.db
+    .query(index,
+      omitNormalization ?
+        options :
+        this.normalizeOptions({ include_docs: true, ...options }, true)
     );
 };
 
-Model.prototype.findAllRaw = function(options = {}) {
-  return this.db
-    .allDocs(this.normalizeOptions({ include_docs: true, ...options }));
+Model.prototype.findByIndex = function(index, options = {}, omitNormalization) {
+  return this
+    .findByIndexRaw(index, options, omitNormalization)
+    .then(res => flattenDocs(res));
 };
 
-Model.prototype.findAll = function(options = {}) {
-  return this.findAllRaw(options)
-    .then(res => res.rows.map(row => ({
-      ...row.doc,
-      _key: row.key
-    })));
+Model.prototype.findAllRaw = function(options = {}, omitNormalization) {
+  return this.db
+    .allDocs(
+      omitNormalization ?
+        options :
+        this.normalizeOptions({ include_docs: true, ...options })
+    );
+};
+
+Model.prototype.findAll = function(options = {}, omitNormalization) {
+  return this.findAllRaw(options, omitNormalization)
+    .then(res => flattenDocs(res));
 };
 
 /*
