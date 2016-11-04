@@ -116,6 +116,14 @@ test('#normalizeOptions', async t => {
     endkey: '_design\uffff',
     descending: true
   });
+
+  t.deepEqual(model.normalizeOptions({ key: 'asd' }), {
+    key: 'asd'
+  });
+
+  t.deepEqual(model.normalizeOptions({ keys: ['asd'] }), {
+    keys: ['asd']
+  });
 });
 
 test('#findAll', async t => {
@@ -169,6 +177,9 @@ test('#findAll', async t => {
 
   t.deepEqual(await fn({ since: `item:${doc3[doc3.length - 1]}`, descending: true }), [2, 1, 0]);
   t.deepEqual(await fn({ since: `item:${doc3[doc3.length - 1]}`, endkey: 'item:1', descending: true }), [2, 1]);
+
+  t.deepEqual(await fn({ keys: ['item:5', 'item:7'] }), [5, 7]);
+  t.deepEqual(await fn({ since: `item:${doc3[doc3.length - 1]}`, keys: ['item:5', 'item:7'] }), [5, 7]); // ignore since
 });
 
 test('#findOneOrInit', async t => {
