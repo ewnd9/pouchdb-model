@@ -18,7 +18,7 @@ test('Create correct subtitles model', async t => {
 
   let item = { name: 'test' };
   item = await model.update(item);
-  t.deepEqual(Object.keys(item), ['name', '_id', 'updatedAt', '_rev']);
+  t.deepEqual(Object.keys(item).sort(), ['_id', '_rev', 'name', 'updatedAt']);
 
   item = await model.update(item);
   t.truthy(item._rev.indexOf('2-') === 0);
@@ -224,6 +224,8 @@ test('#bulk', async t => {
 
   const result0 = await model.bulk([{ name: 'test-1' }, { name: 'test-2' }]);
   const result1 = await model.bulk([{ name: 'test-1' }, { name: 'test-2' }, { name: 'test-3' }]);
+
+  t.deepEqual(Object.keys(result0[0]).sort(), ['_id', '_rev', 'name', 'updatedAt']);
 
   t.truthy(result0.filter(_ => _._rev).length === 2);
   t.truthy(result1.filter(_ => _._rev).length === 1);
