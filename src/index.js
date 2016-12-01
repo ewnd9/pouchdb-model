@@ -85,7 +85,7 @@ Model.prototype.normalizeOptions = function(options, omitDesignDocsHack) {
   if (('key' in options) || ('keys' in options)) {
     return options;
   }
-  
+
   let { startkey, endkey, since, ...filteredOptions } = options;
 
   if ('startkey' in options) {
@@ -120,6 +120,10 @@ Model.prototype.normalizeDoc = function(data) {
     _id: this.createId(data),
     updatedAt: new Date().toISOString()
   };
+
+  if (!doc.createdAt) {
+    doc.createdAt = doc.updatedAt;
+  }
 
   if ('_key' in doc) {
     delete doc._key;

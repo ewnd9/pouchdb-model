@@ -127,6 +127,11 @@ or error (has `error`, `name`, `status` and, in case of validation error - `err`
 
 ### `#sync(db: PouchDB | String, options: Object?, notify: Function)`
 
+## Changelog
+
+- `v0.4.0`
+  - `createdAt` property
+
 ## Related
 
 - [PouchDB Plugins](https://pouchdb.com/external.html#plugins)
